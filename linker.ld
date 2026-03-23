@@ -20,6 +20,7 @@ SECTIONS {
     .bss : ALIGN(4K) {
         PROVIDE(_bss_start = .);
         *(.bss);
+        *(.sbss);
         /* define a 32KB stack */
         . += 32K;
         PROVIDE(stack_top = .);
@@ -33,12 +34,14 @@ SECTIONS {
         PROVIDE(_rodata_start = .);
         *(.rodata);
         *(.rodata.*);
+        *(.srodata);
         PROVIDE(_rodata_end = .);
     }
 
     .data : ALIGN(4K) {
         PROVIDE(_data_start = .);
         *(.data);
+        *(.sdata);
         PROVIDE(_data_end = .);
     }
 
