@@ -17,10 +17,12 @@ void memset64(u64 *dest, u64 val, size_t count)
 
 char *strncpy(char *dst, char *src, size_t n)
 {
-	while (n > 0 && *src != '\0') {
+	while (n > 1 && *src != '\0') {
 		*dst++ = *src++;
 		n--;
 	}
+
+	dst[n] = 0;
 
 	return dst;
 }
