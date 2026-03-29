@@ -2,6 +2,7 @@
 #define __TYPES_H__
 
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef unsigned char		u8;
 typedef unsigned short		u16;
@@ -16,7 +17,5 @@ typedef u64	uint64_t;
 typedef u64	size_t;
 
 typedef u64	phys_addr_t;
-
-#define NULL ((void *) 0)
 
 #endif
