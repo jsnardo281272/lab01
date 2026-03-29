@@ -1,3 +1,4 @@
+#include <kernel/dtb.h>
 #include <kernel/printf.h>
 #include <kernel/types.h>
 #include <arch/csr.h>
@@ -5,10 +6,28 @@
 // the kernel entry point once we get to S-mode, implemented in kernel.c
 extern void kmain();
 
+/* device tree address, initialized in entry.S */
+extern phys_addr_t kernel_dtb;
+/* boot arguments passed through QEMU using the -append option */
+extern char *bootargs;
+
 void mmode_startup(void)
 {
 	info("[M] booting in M-mode\n");
 	info("[M] starting early kernel boot\n");
+
+	/* parse the kernel cmdline arguments from the device tree */
+	info("[M] kernel_dtb: 0x%x\n", kernel_dtb);
+	struct dtb_node node = dtb_match_node_name((struct dtb*)kernel_dtb, "chosen");
+	struct dtb_prop prop = dtb_node_match_property((struct dtb*)kernel_dtb, &node, "bootargs");
+
+	if (prop.name != NULL) {
+		bootargs = prop.value;
+	} else {
+		bootargs = "";
+	}
+
+	info("[M] bootargs: %s\n", bootargs);
 
 	info("[M] setting mstatus[MPP] = 01 to enter S-mode upon mret\n");
 	u64 val;

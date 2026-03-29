@@ -24,6 +24,7 @@ common_sources = [
   'string.c',
   'panic.c',
   'alloc.c',
+  'dtb.c',
 ]
 
 kernel_sources = common_sources + [

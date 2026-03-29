@@ -15,7 +15,7 @@ void memset64(u64 *dest, u64 val, size_t count)
 	}
 }
 
-char *strncpy(char *dst, char *src, size_t n)
+char *strncpy(char *dst, const char *src, size_t n)
 {
 	while (n > 1 && *src != '\0') {
 		*dst++ = *src++;
@@ -25,4 +25,21 @@ char *strncpy(char *dst, char *src, size_t n)
 	dst[n] = 0;
 
 	return dst;
+}
+
+int strcmp(const char *str1, const char *str2)
+{
+	while (*str1 != '\0') {
+		if (*str1++ != *str2++)
+			break;
+	}
+
+	return *(unsigned char*)str1 - *(unsigned char*)str2;
+}
+
+size_t strlen(const char *str)
+{
+	size_t len = 0;
+	while (*str++ != '\0') len++;
+	return len;
 }

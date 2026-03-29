@@ -27,6 +27,8 @@ SECTIONS {
         /* define a 4096-byte space for global vars */
         . += 4096;
         PROVIDE(global_pointer = .);
+        PROVIDE(kernel_dtb = .);
+        PROVIDE(bootargs = .);
         PROVIDE(_bss_end = .);
     }
 

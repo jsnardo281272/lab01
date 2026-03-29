@@ -29,6 +29,15 @@ bss_clear:
     la t0, mmode_startup
     csrw mepc, t0
 
+    # save flattened device tree address
+save_dtb:
+    .option push
+    .option norelax
+    .extern kernel_dtb
+        la t0, kernel_dtb
+        sw a1, (t0)
+    .option pop
+
     # jump to kernel
     tail mmode_startup
 
