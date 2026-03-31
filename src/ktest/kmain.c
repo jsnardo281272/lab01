@@ -6,6 +6,7 @@
 #include <kernel/mm.h>
 #include <kernel/panic.h>
 #include <kernel/printf.h>
+#include <kernel/string.h>
 #include <kernel/types.h>
 
 #include <ktest/test.h>
@@ -575,18 +576,53 @@ struct ktest_suite vm_map_tests = {
 	.exit = vm_map_tests_exit,
 };
 
+extern char *bootargs;
+#define KTEST_ARG_MAX_SIZE 64
+char ktest_arg[KTEST_ARG_MAX_SIZE];
+void parse_bootarg_ktest(char *bootargs, char *buf, size_t size)
+{
+	const char *prefix = "ktest_run=";
+	const size_t prefix_len = strlen(prefix);
+	if (strncmp(bootargs, prefix, prefix_len) != 0) {
+		buf[0] = '\0';
+		return;
+	}
+
+	strncpy(buf, bootargs + prefix_len, size);
+}
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
 void kmain()
 {
+	bool ktest_single_test = false;
+	struct ktest_suite *suites[] = {
+		&page_unit_tests,
+		&virt_addr_unit_tests,
+		&ppn_unit_tests,
+		&pte_unit_tests,
+		&alloc_tests,
+		&vm_map_tests,
+		NULL
+	};
+
 	info("entered S-mode\n");
 
-	extern struct ktest_suite pte_unit_tests;
-	ktest_suite_run(&page_unit_tests);
-	ktest_suite_run(&virt_addr_unit_tests);
-	ktest_suite_run(&ppn_unit_tests);
-	ktest_suite_run(&pte_unit_tests);
-	ktest_suite_run(&alloc_tests);
-	ktest_suite_run(&vm_map_tests);
+	parse_bootarg_ktest(bootargs, ktest_arg, KTEST_ARG_MAX_SIZE);
+	if (strlen(ktest_arg) > 0)
+		ktest_single_test = true;
+	error("ktest_arg: \"%s\", strlen=%d\n", ktest_arg, strlen(ktest_arg));
+
+	for (size_t i = 0; suites[i] != NULL; i++) {
+		if (!ktest_single_test) {
+			ktest_suite_run(suites[i]);
+		} else {
+			if (strcmp(ktest_arg, suites[i]->name) == 0)
+				ktest_suite_run(suites[i]);
+		}
+	}
 
 	info("nothing else to do for now; spinning indefinitely...");
 	while (1) {}
 }
+#pragma clang diagnostic pop
