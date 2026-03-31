@@ -385,6 +385,9 @@ void vm_map_tests_kernel(struct ktest *test)
 	printk_set_level(LOG_DEBUG);
 	vm_init();
 
+	/* confirm that we've enabled paging in the SATP CSR */
+	KTEST_ASSERT(test, csr_read(CSR_SATP) != 0);
+
 	/* if we've gotten past vm_init at all then this probably
 	 * didn't happen, but check anyway */
 	KTEST_ASSERT(test, ktest_fault_occurred == 0);
