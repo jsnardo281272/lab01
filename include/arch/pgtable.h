@@ -40,7 +40,9 @@
  * PPN_DOWN(): Round address down to the nearest page boundary.
  * @addr: Address to round down.
  *
- * Returns: ddress rounded down to the nearest page boundary.
+ * For example, PPN_DOWN(0x1001) == 0x1
+ *
+ * Returns: the PPN of the nearest page boundary, rounded down.
  */
 #define PPN_DOWN(addr) ((u64) (addr) & 0UL)
 
@@ -48,7 +50,9 @@
  * PPN_UP(): Round address up to the nearest page boundary.
  * @addr: Address to round up.
  *
- * Returns: the address rounded up to the nearest page boundary.
+ * For example, PPN_DOWN(0x1001) == 0x2
+ *
+ * Returns: the PPN of the nearest page boundary, rounded up.
  */
 #define PPN_UP(addr) ((u64) (addr) & 0UL)
 
