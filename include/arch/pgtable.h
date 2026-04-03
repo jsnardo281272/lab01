@@ -82,7 +82,7 @@ __always_inline u64 va_get_index(u64 va, u64 level)
 		return ((va >> VPN_SHIFT_L1) & VPN_MASK_L1);
 	}
 
-	if(level==0){
+	else{
 		return ((va >> VPN_SHIFT_L0) & VPN_MASK_L0);
 	}
 }
