@@ -46,21 +46,53 @@ struct pgtable *kernel_root_ptb;
 
 void mm_init()
 {
-	/* FIXME: implement mm_init */
+	kernel_root_ptb = (struct pgtable *) alloc_zero_page(); // alocates root page table
+	mm_init_kmap(); // loads memory layout
+
+	for (u64 addr = kmap.text_start; addr < kmap.text_end; addr += PAGE_SIZE) // maps text vrtual adresses in page tables to physical by calling map_page
+    vm_map_page(addr, addr, PTE_READ | PTE_EXEC); // set READ and EXEC permissions
+
+	for (u64 addr = kmap.bss_start; addr < kmap.bss_end; addr += PAGE_SIZE) // maps bss vrtual adresses in page tables to physical by calling map_page
+    vm_map_page(addr, addr, PTE_READ | PTE_WRITE); // set READ and WRITE permissions
+
+	for (u64 addr = kmap.rodata_start; addr < kmap.rodata_end; addr += PAGE_SIZE) // maps rodata vrtual adresses in page tables to physical by calling map_page
+    vm_map_page(addr, addr, PTE_READ); // set READ permissions
+
+	for (u64 addr = kmap.data_start; addr < kmap.data_end; addr += PAGE_SIZE) // maps data vrtual adresses in page tables to physical by calling map_page
+    vm_map_page(addr, addr, PTE_READ | PTE_WRITE); // set READ and WRITE permissions
+
+	vm_map_page(0x10000000, 0x10000000, PTE_READ | PTE_WRITE); // sets serial device
+
+	vm_map_page(0x0, 0x0, 0); // sets null pointer
 }
 
 int vm_map_page(u64 va, phys_addr_t pa, u64 flags)
 {
-	info("va: 0x%x, pa: 0x%x, flags: 0x%x not used\n", va, pa, flags);
-	/* FIXME: implement vm_map_page */
-	return -1;
+	struct pgtable *pt = kernel_root_ptb;
+
+	for (u64 level=2; level>0; level--){ // for the first two levels 
+		u64 id= va_get_index(va, level); // get VPN[level] index
+		pte_t *pte = ptb_get_ptep(pt, id); // passes the root page table and returns page table entry at VPN[level] index
+
+		if (!pte_valid(*pte)){ // if pte is not valid (is not mapped)
+			phys_addr_t new_pa = alloc_zero_page(); // allocates new page table
+			ppn_t ppn = phys_to_ppn(new_pa); // gets PPN from the new page's physical adress
+			*pte = pte_from_ppn(ppn) | PTE_VALID; // writes pte and set valid to 1
+		}
+
+		pt = pte_next_ptb(*pte); // from the page table entry, get next-level page table
+	}
+
+	u64 id= va_get_index(va, 0UL); // get VPN[0] index (leaf)
+	pte_t *pte = ptb_get_ptep(pt, id);
+
+	*pte = pte_from_ppn(phys_to_ppn(pa)) | flags | PTE_VALID; // maps va to pa with given flags and sets to valid
+	
+	return 0;
 }
 
 void vm_init()
 {
 	mm_init();
-
-	/* uncomment the line below to load the page tables by writing the address
-	 * of kernel_root_ptb to the satp CSR */
-	//csr_write(CSR_SATP, CSR_SATP_MODE_SV39 | phys_to_ppn((phys_addr_t) kernel_root_ptb));
+	csr_write(CSR_SATP, CSR_SATP_MODE_SV39 | phys_to_ppn((phys_addr_t) kernel_root_ptb));
 }
